@@ -14,7 +14,7 @@
   "repository": "",
   "scripts": {
     "build": "ember build",
-    "start": "ember server",
+    "start": "ember server  -p 4212",
     "test": "ember try:each"
   },
   "dependencies": {
