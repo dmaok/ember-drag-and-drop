@@ -1,0 +1,14 @@
+{{yield
+    (hash
+        item=(component 'ember-dnd/item'
+            baseClass=baseClass
+            insert=(action 'insertItem')
+            destroy=(action 'destroyItem')
+            dragStart=(action 'onDragStart')
+            drag=(action 'onDrag')
+            dragEnd=(action 'onDragEnd')
+        )
+    )
+}}
+
+{{ember-dnd/spacer baseClass=baseClass}}

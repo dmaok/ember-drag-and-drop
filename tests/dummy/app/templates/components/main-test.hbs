@@ -1,0 +1,26 @@
+{{#ember-dnd class='test-list' as |dnd|}}
+  {{#each model.items}}
+    {{#dnd.item class='test-list__item' as |item|}}
+      {{#item.handler}}
+        <div class="test-list__handler">
+
+        </div>
+      {{/item.handler}}
+    {{/dnd.item}}
+  {{/each}}
+{{/ember-dnd}}
+
+
+{{#ember-dnd baseClass='dnd' class='test-list' as |dnd|}}
+  {{#each model.items}}
+    {{#dnd.item class='test-list__item' as |item|}}
+      {{item.handler class='test-list__handler'}}
+    {{/dnd.item}}
+  {{/each}}
+{{/ember-dnd}}
+
+{{#ember-dnd class='test-list' as |dnd|}}
+  {{#each model.items}}
+    {{dnd.item class='test-list__item'}}
+  {{/each}}
+{{/ember-dnd}}
