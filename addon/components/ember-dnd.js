@@ -154,9 +154,7 @@ export default Component.extend({
           renderFixStep();
           $element.removeAttr('style');
 
-          setTimeout(() => {
-            model && model.set('order', item.get('order'));
-          }, 0);
+          model && model.set('order', item.get('order'));
         }, 0);
       });
 
@@ -218,7 +216,6 @@ export default Component.extend({
             .reduce((result, item) => {
               if (item.get('isSpacer')) {
                 spacer = item;
-                return result;
               }
 
               const
@@ -254,6 +251,8 @@ export default Component.extend({
               predictedTarget = targets[0],
               predictedTargetOrder = predictedTarget.get('order');
 
+            if (predictedTarget === spacer) return null;
+
             //if two targets is near - take closest to draggableOrder and by square of overlay
             if (targets.length > 1) {
               for (let i = 1; i < targets.length; i++) {
@@ -269,7 +268,11 @@ export default Component.extend({
 
             //else - take biggest by square of overlay
             return predictedTarget;
-          })(),
+          })();
+
+        if (!target) return;
+
+        const
           targetOrder = target.get('order'),
           direction = targetOrder > draggableOrder ? -1 : 1;
 
