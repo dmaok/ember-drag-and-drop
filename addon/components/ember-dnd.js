@@ -133,9 +133,14 @@ export default Component.extend({
     });
   },
 
-  stopDrag() {
+   stopDrag() {
     once(() => {
       let spacer = this.get('matrix').find(item => item.get('isSpacer'));
+
+      this.get('draggableItem').setProperties({
+        x: spacer.get('x'),
+        y: spacer.get('y')
+      });
 
       [...this.get('matrix'), this.get('draggableItem')].forEach(item => {
         if (item.get('isSpacer')) {
@@ -146,21 +151,17 @@ export default Component.extend({
           model = item.get('itemSrc.model'),
           $element = item.get('$element');
 
+        $element.css('transition', 'all 0s');
+        renderFixStep();
+        $element.css('transform', 'none');
+
+        // renderFixStep();
+
+        model && model.set('order', item.get('order'));
+
         setTimeout(() => {
-          $element.css('transition', 'all 0s');
-          renderFixStep();
-          $element.css('transform', 'none');
-
-          renderFixStep();
           $element.removeAttr('style');
-
-          model && model.set('order', item.get('order'));
-        }, 0);
-      });
-
-      this.get('draggableItem').setProperties({
-        x: spacer.get('x'),
-        y: spacer.get('y')
+        }, 0)
       });
 
       this.set('matrix', null);
