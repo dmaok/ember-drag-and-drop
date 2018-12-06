@@ -48,14 +48,16 @@ export default Component.extend({
       };
 
       if (isSpacer) {
+        const $draggableElement = draggableItem.get('$element');
 
         Object.assign(css, {
           width: item.get('width'),
           height: item.get('height'),
           zIndex: 1,
           transform: `translate3d(
-            ${x + parseInt(draggableItem.get('$element').css('margin-left'))}px, 
-            ${y + parseInt(draggableItem.get('$element').css('margin-top'))}px, 0)
+            ${x + parseInt($draggableElement.css('margin-left')) + this.get('calculatePadding') ? parseInt($draggableElement.css('padding-left')) : 0}px, 
+            ${y + parseInt($draggableElement.css('margin-top')) + this.get('calculatePadding') ? parseInt($draggableElement.css('padding-top')) : 0}px,
+             0)
           `
         });
 
