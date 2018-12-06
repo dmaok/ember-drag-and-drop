@@ -1,10 +1,10 @@
 import Component from '@ember/component';
 import layout from '../../templates/components/ember-dnd/item';
-import BaseItem from 'ember-drag-and-drop/mixins/components/base-item';
 import { computed } from '@ember/object';
 
-export default Component.extend(BaseItem, {
-  name: 'item',
+export default Component.extend({
+  classNames: ['ember-dnd__item'],
+  classNameBindings: ['isDragTarget:is-dnd-target'],
 
   didInsertElement() {
     this._super(...arguments);
@@ -37,15 +37,17 @@ export default Component.extend(BaseItem, {
   },
 
   onDragStart() {
-    this.sendAction('dragStart', this, ...arguments)
+    this.sendAction('dragStart', this, ...arguments);
+    this.set('isDragTarget', true);
   },
 
   onDrag() {
-    this.sendAction('drag', this, ...arguments)
+    this.sendAction('drag', ...arguments);
   },
 
   onDragEnd() {
-    this.sendAction('dragEnd', this, ...arguments)
+    this.sendAction('dragEnd', ...arguments);
+    this.set('isDragTarget', false);
   },
 
   $handler: computed('_$handler', {

@@ -1,9 +1,8 @@
 import Component from '@ember/component';
 import layout from '../../templates/components/ember-dnd/handler';
-import BaseItem from 'ember-drag-and-drop/mixins/components/base-item';
 
-export default Component.extend(BaseItem, {
-  name: 'handler',
+export default Component.extend({
+  classNames: ['ember-dnd__handler'],
 
   didInsertElement() {
     this._super(...arguments);

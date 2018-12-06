@@ -1,6 +1,7 @@
 import Component from '@ember/component';
 import layout from '../templates/components/main-test';
 import { inject } from '@ember/service';
+import { computed } from '@ember/object';
 
 export default Component.extend({
   store: inject(),
@@ -20,6 +21,12 @@ export default Component.extend({
       model.get('items').pushObject(item);
     }
 
-    this.set('model', model);
-  }
+    this.set('_model', model);
+  },
+
+  items: computed('_model.items.@each.order', function() {
+    if (!this.get('_model.items.length')) return;
+
+    return this.get('_model.items').sortBy('order');
+  })
 });
