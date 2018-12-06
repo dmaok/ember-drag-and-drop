@@ -4,7 +4,6 @@ import EmberObject, { computed, observer } from '@ember/object';
 import { once } from '@ember/runloop';
 import { calculateRectanglesWrapRectangle, getCssFromRectangle, getRectangleFromCss, intersect } from '../utils/math';
 import layout from '../templates/components/ember-dnd';
-import 'npm:nzc_draggable';
 
 const { bool, not } = computed;
 

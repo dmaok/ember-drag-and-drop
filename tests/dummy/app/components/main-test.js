@@ -2,6 +2,7 @@ import Component from '@ember/component';
 import layout from '../templates/components/main-test';
 import { inject } from '@ember/service';
 import { computed } from '@ember/object';
+import 'npm:nzc_draggable';
 
 export default Component.extend({
   store: inject(),
