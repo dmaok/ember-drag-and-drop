@@ -55,8 +55,8 @@ export default Component.extend({
           height: item.get('height'),
           zIndex: 1,
           transform: `translate3d(
-            ${x + parseInt($draggableElement.css('margin-left')) + this.get('calculatePadding') ? parseInt($draggableElement.css('padding-left')) : 0}px, 
-            ${y + parseInt($draggableElement.css('margin-top')) + this.get('calculatePadding') ? parseInt($draggableElement.css('padding-top')) : 0}px,
+            ${x + parseInt($draggableElement.css('margin-left')) + (this.get('calculatePadding') ? parseInt($draggableElement.css('padding-left')) : 0)}px, 
+            ${y + parseInt($draggableElement.css('margin-top')) + (this.get('calculatePadding') ? parseInt($draggableElement.css('padding-top')) : 0)}px,
              0)
           `
         });
