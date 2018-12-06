@@ -151,10 +151,12 @@ export default Component.extend({
           renderFixStep();
           $element.css('transform', 'none');
 
-          model && model.set('order', item.get('order'));
-
           renderFixStep();
           $element.removeAttr('style');
+
+          setTimeout(() => {
+            model && model.set('order', item.get('order'));
+          }, 0);
         }, 0);
       });
 
