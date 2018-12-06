@@ -10,7 +10,11 @@ export default Component.extend({
     this._super(...arguments);
 
     if (!this.get('$handler')) {
-      this.set('$handler', this.$());
+      if (this.get('handlerSelector')) {
+        this.set('$handler', this.$(`${this.get('handlerSelector')}`));
+      } else {
+        this.set('$handler', this.$());
+      }
     }
 
     this.sendAction('insert', this);
