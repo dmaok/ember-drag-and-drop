@@ -9,7 +9,7 @@ const { bool, not } = computed;
 
 export default Component.extend({
   classNames: ['ember-dnd'],
-  classNameBindings: ['baseClass'],
+  classNameBindings: ['isDragState:is-drag-state'],
   latency: 100,
   transitionTime: 200,
 
