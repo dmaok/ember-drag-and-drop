@@ -2,7 +2,7 @@ import Component from '@ember/component';
 import { A } from '@ember/array';
 import EmberObject, { computed, observer } from '@ember/object';
 import { once } from '@ember/runloop';
-import { calculateRectanglesWrapRectangle, getCssFromRectangle, getRectangleFromCss, intersect } from '../utils/math';
+import { calculateOverlapArea, getRectangleFromCss, intersect } from '../utils/math';
 import layout from '../templates/components/ember-dnd';
 
 const { bool, not } = computed;
@@ -217,7 +217,6 @@ export default Component.extend({
             .reduce((result, item) => {
               if (item.get('isSpacer')) {
                 spacer = item;
-                return result;
               }
 
               const
@@ -227,20 +226,14 @@ export default Component.extend({
               if (intersect(draggablePositionPlainObject, positionObject)) {
                 result.push({
                   item,
-                  wrapSquare: (() => {
-                    const
-                      wrapRectangle = calculateRectanglesWrapRectangle([rectangle, draggableRectangle]),
-                      { width, height } = getCssFromRectangle(wrapRectangle);
-
-                    return width * height;
-                  })()
-                })
+                  overlapSquare: calculateOverlapArea(rectangle, draggableRectangle)
+                });
               }
 
               return result;
             }, [])
-            .sort(({ wrapSquare: square1 }, { wrapSquare: square2 }) => {
-              return square1 - square2
+            .sort(({ overlapSquare: square1 }, { overlapSquare: square2 }) => {
+              return square2 - square1
             })
             .map(({ item }) => item);
 
@@ -251,13 +244,16 @@ export default Component.extend({
           target = (() => {
             let
               predictedTarget = targets[0],
-              predictedTargetOrder = predictedTarget && predictedTarget.get('order');
+              predictedTargetOrder = predictedTarget && predictedTarget.get('order'),
+              targetsWithoutSpacer = targets.filter(target => !target.get('isSpacer'));
+
+            if (predictedTarget === spacer) return;
 
             //if two targets is near - take closest to draggableOrder and by square of overlay
-            if (targets.length > 1) {
-              for (let i = 1; i < targets.length; i++) {
+            if (targetsWithoutSpacer.length > 1) {
+              for (let i = 1; i < targetsWithoutSpacer.length; i++) {
                 const
-                  secondTarget = targets[i],
+                  secondTarget = targetsWithoutSpacer[i],
                   secondOrder = secondTarget.get('order');
 
                 if (Math.abs(predictedTargetOrder - secondOrder) === 1) {

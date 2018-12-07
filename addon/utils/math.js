@@ -79,3 +79,24 @@ export const getCssFromRectangle = (rectangle = []) => {
     height: Math.abs(c.y - a.y),
   };
 };
+
+export const calculateOverlapArea = (r1, r2) => {
+  const
+    rectangle1 = {
+      left: r1[0].x,
+      right: r1[1].x,
+      top: r1[0].y,
+      bottom: r1[2].y,
+    },
+    rectangle2 = {
+      left: r2[0].x,
+      right: r2[1].x,
+      top: r2[0].y,
+      bottom: r2[2].y,
+    };
+
+  const xOverlap = Math.max(0, Math.min(rectangle1.right, rectangle2.right) - Math.max(rectangle1.left, rectangle2.left));
+  const yOverlap = Math.max(0, Math.min(rectangle1.bottom, rectangle2.bottom) - Math.max(rectangle1.top, rectangle2.top));
+
+  return xOverlap * yOverlap;
+};
