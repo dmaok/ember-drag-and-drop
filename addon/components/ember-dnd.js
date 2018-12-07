@@ -133,7 +133,7 @@ export default Component.extend({
     });
   },
 
-   stopDrag() {
+  stopDrag() {
     once(() => {
       let spacer = this.get('matrix').find(item => item.get('isSpacer'));
 
@@ -217,6 +217,7 @@ export default Component.extend({
             .reduce((result, item) => {
               if (item.get('isSpacer')) {
                 spacer = item;
+                return result;
               }
 
               const
@@ -250,9 +251,7 @@ export default Component.extend({
           target = (() => {
             let
               predictedTarget = targets[0],
-              predictedTargetOrder = predictedTarget.get('order');
-
-            if (predictedTarget === spacer) return null;
+              predictedTargetOrder = predictedTarget && predictedTarget.get('order');
 
             //if two targets is near - take closest to draggableOrder and by square of overlay
             if (targets.length > 1) {
