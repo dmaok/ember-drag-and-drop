@@ -213,7 +213,7 @@ export default Component.extend({
         const
           draggablePositionPlainObject = draggableItem.getProperties('x', 'y', 'width', 'height'),
           draggableRectangle = getRectangleFromCss(draggablePositionPlainObject),
-          targets = matrix
+          allTargets = matrix
             .reduce((result, item) => {
               if (item.get('isSpacer')) {
                 spacer = item;
@@ -221,12 +221,15 @@ export default Component.extend({
 
               const
                 positionObject = item.getProperties('x', 'y', 'width', 'height'),
-                rectangle = getRectangleFromCss(positionObject);
+                rectangle = getRectangleFromCss(positionObject),
+                overlapSquare = calculateOverlapArea(rectangle, draggableRectangle),
+                rectangleSquare = positionObject.width * positionObject.height,
+                overlapToRectangleRatio = overlapSquare / rectangleSquare;
 
-              if (intersect(draggablePositionPlainObject, positionObject)) {
+              if (intersect(draggablePositionPlainObject, positionObject) && overlapToRectangleRatio > .1) {
                 result.push({
                   item,
-                  overlapSquare: calculateOverlapArea(rectangle, draggableRectangle)
+                  overlapSquare
                 });
               }
 
@@ -234,12 +237,20 @@ export default Component.extend({
             }, [])
             .sort(({ overlapSquare: square1 }, { overlapSquare: square2 }) => {
               return square2 - square1
-            })
-            .map(({ item }) => item);
+            });
 
-        if (!targets.length) return;
+        if (!allTargets.length) return;
 
         const
+          maxOverlap = Math.max(...allTargets.map(({ overlapSquare }) => overlapSquare)),
+          targets = allTargets.reduce((result, { overlapSquare, item }) => {
+
+            if (overlapSquare / maxOverlap > .3) {
+              result.push(item);
+            }
+
+            return result;
+          }, []),
           draggableOrder = draggableItem.get('order'),
           target = (() => {
             let
