@@ -1,30 +1,32 @@
 import Component from '@ember/component';
-import layout from '../../templates/components/ember-dnd/item';
-import { computed } from '@ember/object';
+import jQuery from 'jquery';
+import layout from '../../templates/components/ember-dnd/item'
+import {computed, action} from '@ember/object';
 
-export default Component.extend({
-  classNames: ['ember-dnd__item'],
-  classNameBindings: ['isDragTarget:is-dnd-target'],
+export default class Item extends Component {
+  layout = layout;
+  classNames = ['ember-dnd__item'];
+  classNameBindings = ['isDragTarget:is-dnd-target'];
 
   didInsertElement() {
-    this._super(...arguments);
+    super.didInsertElement(...arguments);
 
     if (!this.get('$handler')) {
       if (this.get('handlerSelector')) {
-        this.set('$handler', this.$(`${this.get('handlerSelector')}`));
+        this.set('$handler', this.element.querySelector(this.get('handlerSelector')));
       } else {
-        this.set('$handler', this.$());
+        this.set('$handler', this.element);
       }
     }
 
-    this.sendAction('insert', this);
-  },
+    this.insert(this);
+  }
 
   willDestroyElement() {
-    this._super(...arguments);
+    super.willDestroyElement(...arguments);
 
-    this.sendAction('destroy', this);
-  },
+    this.destroy(this);
+  }
 
   initEvents($handler) {
     $handler.nzc_draggable({
@@ -32,53 +34,49 @@ export default Component.extend({
       onDrag: this.onDrag.bind(this),
       onDragEnd: this.onDragEnd.bind(this)
     });
-  },
+  }
 
   resetEvents($handler) {
     if (!$handler) return;
 
     $handler.nzc_draggable('reset');
-  },
+  }
 
   onDragStart() {
-    this.sendAction('dragStart', this, ...arguments);
+    this.dragStart(this, ...arguments);
     this.set('isDragTarget', true);
-  },
+  }
 
   onDrag() {
-    this.sendAction('drag', ...arguments);
-  },
+    this.drag(...arguments);
+  }
 
   onDragEnd() {
-    this.sendAction('dragEnd', ...arguments);
+    this.dragEnd(...arguments);
     this.set('isDragTarget', false);
-  },
+  }
 
-  $handler: computed('_$handler', {
-    get() {
-      return this.get('_$handler');
-    },
+  @computed('_$handler')
+  get $handler() {
+    return this.get('_$handler');
+  }
 
-    set(key, $newHandler) {
-      this.resetEvents(this.get('$handler'));
+  set $handler($newHandler) {
+    this.resetEvents(this.get('$handler'));
+    this.set('_$handler', $newHandler);
 
-      this.set('_$handler', $newHandler);
+    this.initEvents(jQuery($newHandler));
 
-      this.initEvents($newHandler);
+    return $newHandler;
+  }
 
-      return $newHandler;
-    }
-  }),
+  @action
+  insertHandler($element) {
+    this.set('$handler', $element);
+  }
 
-  actions: {
-    insertHandler($element) {
-      this.set('$handler', $element);
-    },
-
-    destroyHandler() {
-      this.set('$handler', null);
-    }
-  },
-
-  layout
-});
+  @action
+  destroyHandler() {
+    this.set('$handler', null);
+  }
+}

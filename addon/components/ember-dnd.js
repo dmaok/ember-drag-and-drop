@@ -1,31 +1,37 @@
 import Component from '@ember/component';
-import { A } from '@ember/array';
-import EmberObject, { computed, observer } from '@ember/object';
-import { once } from '@ember/runloop';
-import { calculateOverlapArea, getRectangleFromCss, intersect } from '../utils/math';
+import {A} from '@ember/array';
+import { observes } from '@ember-decorators/object';
+import EmberObject, { action } from '@ember/object';
+import { bool, not } from '@ember/object/computed';
+import {once} from '@ember/runloop';
+import {calculateOverlapArea, getRectangleFromCss, intersect} from '../utils/math';
 import layout from '../templates/components/ember-dnd';
+import jQuery from 'jquery';
 
-const { bool, not } = computed;
+export default class EmberDnd extends Component {
+  classNames = ['ember-dnd'];
+  classNameBindings = ['isDragState:is-drag-state'];
+  latency = 100;
+  transitionTime = 200;
+  draggableItem = EmberObject.create();
 
-export default Component.extend({
-  classNames: ['ember-dnd'],
-  classNameBindings: ['isDragState:is-drag-state'],
-  latency: 100,
-  transitionTime: 200,
+  @bool('draggableItem') isDragState;
+  @not('isDragState') isNotDragState;
 
   init() {
-    this._super(...arguments);
+    super.init(...arguments);
 
-    this.set('items', new A);
-  },
+    this.set('items', A());
+  }
 
   didInsertElement() {
-    this._super(...arguments);
+    super.didInsertElement(...arguments);
 
-    this.set('$spacer', this.$('.ember-dnd__spacer'));
-  },
+    this.set('$spacer', jQuery(this.element.querySelector('.ember-dnd__spacer')));
+  }
 
-  _applyStylesObserver: observer('matrix.@each.x', 'matrix.@each.y', 'draggableItem.x', 'draggableItem.y', function() {
+  @observes('matrix.@each.x', 'matrix.@each.y', 'draggableItem.x', 'draggableItem.y')
+  _applyStylesObserver() {
     const
       matrix = this.get('matrix'),
       draggableItem = this.get('draggableItem');
@@ -44,7 +50,7 @@ export default Component.extend({
       const css = {
         transform: `translate3d(${x - initialX}px, ${y - initialY}px, 0)`,
         zIndex: 2,
-        position: 'relative',
+        position: 'relative'
       };
 
       if (isSpacer) {
@@ -69,13 +75,13 @@ export default Component.extend({
       }
 
       item.get('$element').css(css);
-    })
-  }),
+    });
+  }
 
   initDrag(draggableComponent) {
     const
       items = this.get('items'),
-      matrix = new A;
+      matrix = A([]);
 
     let draggableItem;
 
@@ -83,8 +89,8 @@ export default Component.extend({
       const
         isDraggableItem = draggableComponent === item,
         order = item.get('model.order'),
-        $element = item.$(),
-        { left: x, top: y } = $element.position(),
+        $element = jQuery(item.element),
+        {left: x, top: y} = $element.position(),
         width = $element.width(),
         height = $element.height(),
         object = {
@@ -99,23 +105,24 @@ export default Component.extend({
         };
 
       if (isDraggableItem) {
-        draggableItem = new EmberObject(object);
+        const DraggableItem = EmberObject.extend(object);
+        draggableItem = DraggableItem.create();
 
-        matrix.pushObject(
-          new EmberObject(Object.assign({}, object, {
+        matrix.addObject(
+          EmberObject.extend( object, {
             $element: this.get('$spacer'),
             isSpacer: true
-          }))
+          }).create()
         );
       } else {
-        matrix.pushObject(new EmberObject(object));
+        matrix.addObject(EmberObject.extend(object).create());
       }
     });
 
-    const { minX, minY } = matrix.reduce((result, item) => {
+    const {minX, minY} = matrix.reduce((result, item) => {
       const
-        { minX, minY } = result,
-        { x, y } = item.getProperties('x', 'y');
+        {minX, minY} = result,
+        {x, y} = item.getProperties('x', 'y');
       result.minX = minX ? Math.min(minX, x) : x;
       result.minY = minY ? Math.min(minY, y) : y;
 
@@ -131,13 +138,16 @@ export default Component.extend({
       draggableItem,
       matrix
     });
-  },
+  }
 
   stopDrag() {
-    once(() => {
-      let spacer = this.get('matrix').find(item => item.get('isSpacer'));
+    const draggableItem = this.get('draggableItem');
+    if (!draggableItem) return;
 
-      this.get('draggableItem').setProperties({
+    once(() => {
+      let spacer = (this.get('matrix') || []).find(item => item.get('isSpacer'));
+
+      draggableItem.setProperties({
         x: spacer.get('x'),
         y: spacer.get('y')
       });
@@ -161,173 +171,173 @@ export default Component.extend({
 
         setTimeout(() => {
           $element.removeAttr('style');
-        }, 0)
+        }, 0);
       });
 
       this.set('matrix', null);
       this.set('draggableItem', null);
     });
-  },
+  }
 
-  isDragState: bool('draggableItem'),
-  isNotDragState: not('isDragState'),
+  @action
+  insertItem(item) {
+    this.get('items').addObject(item);
+  }
 
-  actions: {
-    insertItem(item) {
-      this.get('items').pushObject(item);
-    },
+  @action
+  destroyItem(item) {
+    this.get('items').removeObject(item);
+  }
 
-    destroyItem(item) {
-      this.get('items').removeObject(item);
-    },
+  @action
+  onDragStart(item) {
+    this.initDrag(item);
+  }
 
-    onDragStart(item) {
-      this.initDrag(item);
-    },
+  @action
+  onDrag({distance}) {
+    window.clearTimeout(this.get('_dragTimeOut'));
 
-    onDrag({ distance }) {
-      window.clearTimeout(this.get('_dragTimeOut'));
+    const
+      matrix = this.get('matrix'),
+      draggableItem = this.get('draggableItem'),
+      [x, y] = distance;
+
+    if (!draggableItem) return;
+
+    const
+      {initialX, initialY} = draggableItem.getProperties('initialX', 'initialY'),
+      newX = initialX + x,
+      newY = initialY + y;
+
+    draggableItem.setProperties({
+      x: newX,
+      y: newY
+    });
+
+    if (this.get('_locked')) return;
+
+    this.set('_dragTimeOut', setTimeout(() => {
+      let spacer;
 
       const
-        matrix = this.get('matrix'),
-        draggableItem = this.get('draggableItem'),
-        [x, y] = distance;
+        draggablePositionPlainObject = draggableItem.getProperties('x', 'y', 'width', 'height'),
+        draggableRectangle = getRectangleFromCss(draggablePositionPlainObject),
+        allTargets = matrix
+          .reduce((result, item) => {
+            if (item.get('isSpacer')) {
+              spacer = item;
+            }
 
-      if (!draggableItem) return;
+            const
+              positionObject = item.getProperties('x', 'y', 'width', 'height'),
+              rectangle = getRectangleFromCss(positionObject),
+              overlapSquare = calculateOverlapArea(rectangle, draggableRectangle),
+              rectangleSquare = positionObject.width * positionObject.height,
+              overlapToRectangleRatio = overlapSquare / rectangleSquare;
 
-      const
-        { initialX, initialY } = draggableItem.getProperties('initialX', 'initialY'),
-        newX = initialX + x,
-        newY = initialY + y;
-
-      draggableItem.setProperties({
-        x: newX,
-        y: newY
-      });
-
-      if (this.get('_locked')) return;
-
-      this.set('_dragTimeOut', setTimeout(() => {
-        let spacer;
-
-        const
-          draggablePositionPlainObject = draggableItem.getProperties('x', 'y', 'width', 'height'),
-          draggableRectangle = getRectangleFromCss(draggablePositionPlainObject),
-          allTargets = matrix
-            .reduce((result, item) => {
-              if (item.get('isSpacer')) {
-                spacer = item;
-              }
-
-              const
-                positionObject = item.getProperties('x', 'y', 'width', 'height'),
-                rectangle = getRectangleFromCss(positionObject),
-                overlapSquare = calculateOverlapArea(rectangle, draggableRectangle),
-                rectangleSquare = positionObject.width * positionObject.height,
-                overlapToRectangleRatio = overlapSquare / rectangleSquare;
-
-              if (intersect(draggablePositionPlainObject, positionObject) && overlapToRectangleRatio > .1) {
-                result.push({
-                  item,
-                  overlapSquare
-                });
-              }
-
-              return result;
-            }, [])
-            .sort(({ overlapSquare: square1 }, { overlapSquare: square2 }) => {
-              return square2 - square1
-            });
-
-        if (!allTargets.length) return;
-
-        const
-          maxOverlap = Math.max(...allTargets.map(({ overlapSquare }) => overlapSquare)),
-          targets = allTargets.reduce((result, { overlapSquare, item }) => {
-
-            if (overlapSquare / maxOverlap > .3) {
-              result.push(item);
+            if (intersect(draggablePositionPlainObject, positionObject) && overlapToRectangleRatio > .1) {
+              result.push({
+                item,
+                overlapSquare
+              });
             }
 
             return result;
-          }, []),
-          draggableOrder = draggableItem.get('order'),
-          target = (() => {
-            let
-              predictedTarget = targets[0],
-              predictedTargetOrder = predictedTarget && predictedTarget.get('order'),
-              targetsWithoutSpacer = targets.filter(target => !target.get('isSpacer'));
+          }, [])
+          .sort(({overlapSquare: square1}, {overlapSquare: square2}) => {
+            return square2 - square1;
+          });
 
-            if (predictedTarget === spacer) return;
+      if (!allTargets.length) return;
 
-            //if two targets is near - take closest to draggableOrder and by square of overlay
-            if (targetsWithoutSpacer.length > 1) {
-              for (let i = 1; i < targetsWithoutSpacer.length; i++) {
-                const
-                  secondTarget = targetsWithoutSpacer[i],
-                  secondOrder = secondTarget.get('order');
+      const
+        maxOverlap = Math.max(...allTargets.map(({overlapSquare}) => overlapSquare)),
+        targets = allTargets.reduce((result, {overlapSquare, item}) => {
 
-                if (Math.abs(predictedTargetOrder - secondOrder) === 1) {
-                  if (Math.abs(draggableOrder - secondOrder) < Math.abs(draggableOrder - predictedTargetOrder)) return secondTarget;
-                }
-              }
-            }
-
-            //else - take biggest by square of overlay
-            return predictedTarget;
-          })();
-
-        if (!target) return;
-
-        const
-          targetOrder = target.get('order'),
-          direction = targetOrder > draggableOrder ? -1 : 1;
-
-        this.set('_locked', true);
-        setTimeout(() => {
-          this.set('_locked', false);
-        }, this.get('transitionTime'));
-
-        once(() => {
-          const toApply = [];
-
-          for (let i = targetOrder; i !== draggableOrder; i += direction) {
-            const
-              item = matrix.find(item => item.get('order') === i),
-              nextOrder = i + direction,
-              nextItem = matrix.find(item => item.get('order') === nextOrder);
-
-            toApply.push({
-              item,
-              x: nextItem.get('x'),
-              y: nextItem.get('y'),
-              order: nextOrder,
-            });
+          if (overlapSquare / maxOverlap > .3) {
+            result.push(item);
           }
 
-          draggableItem.setProperties({
-            order: targetOrder,
-          });
+          return result;
+        }, []),
+        draggableOrder = draggableItem.get('order'),
+        target = (() => {
+          let
+            predictedTarget = targets[0],
+            predictedTargetOrder = predictedTarget && predictedTarget.get('order'),
+            targetsWithoutSpacer = targets.filter(target => !target.get('isSpacer'));
 
-          spacer.setProperties({
-            order: targetOrder,
-            x: target.get('x'),
-            y: target.get('y')
-          });
+          if (predictedTarget === spacer) return;
 
-          toApply.forEach(({ item, x, y, order }) => {
-            item.setProperties({ x, y, order });
+          //if two targets is near - take closest to draggableOrder and by square of overlay
+          if (targetsWithoutSpacer.length > 1) {
+            for (let i = 1; i < targetsWithoutSpacer.length; i++) {
+              const
+                secondTarget = targetsWithoutSpacer[i],
+                secondOrder = secondTarget.get('order');
+
+              if (Math.abs(predictedTargetOrder - secondOrder) === 1) {
+                if (Math.abs(draggableOrder - secondOrder) < Math.abs(draggableOrder - predictedTargetOrder)) return secondTarget;
+              }
+            }
+          }
+
+          //else - take biggest by square of overlay
+          return predictedTarget;
+        })();
+
+      if (!target) return;
+
+      const
+        targetOrder = target.get('order'),
+        direction = targetOrder > draggableOrder ? -1 : 1;
+
+      this.set('_locked', true);
+      setTimeout(() => {
+        this.set('_locked', false);
+      }, this.get('transitionTime'));
+
+      once(() => {
+        const toApply = [];
+
+        for (let i = targetOrder; i !== draggableOrder; i += direction) {
+          const
+            item = matrix.find(item => item.get('order') === i),
+            nextOrder = i + direction,
+            nextItem = matrix.find(item => item.get('order') === nextOrder);
+
+          toApply.push({
+            item,
+            x: nextItem.get('x'),
+            y: nextItem.get('y'),
+            order: nextOrder
           });
+        }
+
+        draggableItem.setProperties({
+          order: targetOrder
         });
-      }, this.get('latency')));
-    },
 
-    onDragEnd() {
-      this.stopDrag();
-    }
-  },
+        spacer.setProperties({
+          order: targetOrder,
+          x: target.get('x'),
+          y: target.get('y')
+        });
 
-  layout
-});
+        toApply.forEach(({item, x, y, order}) => {
+          item.setProperties({x, y, order});
+        });
+      });
+    }, this.get('latency')));
+  }
+
+  @action
+  onDragEnd() {
+    this.stopDrag();
+  }
+
+  layout = layout;
+}
 
 const renderFixStep = () => document.body.offsetHeight;

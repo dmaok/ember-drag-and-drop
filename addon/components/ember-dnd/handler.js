@@ -1,20 +1,20 @@
 import Component from '@ember/component';
 import layout from '../../templates/components/ember-dnd/handler';
 
-export default Component.extend({
-  classNames: ['ember-dnd__handler'],
+export default class Handler extends Component {
+  classNames = ['ember-dnd__handler'];
 
   didInsertElement() {
-    this._super(...arguments);
+    super.didInsertElement(...arguments);
 
-    this.sendAction('insert', this.$());
-  },
+    this.insert(this.element);
+  }
 
   willDestroyElement() {
-    this._super(...arguments);
+    super.willDestroyElement(...arguments);
 
-    this.sendAction('destroy');
-  },
+    this.destroy();
+  }
 
-  layout
-});
+  layout = layout;
+}

@@ -1,8 +1,9 @@
 {{yield
     (hash
-        handler=(component 'ember-dnd/handler'
+        handler=(component "ember-dnd/handler"
             baseClass=baseClass
-            insert=(action 'insertHandler')
+            insert=(action "insertHandler" this)
+            destroy=(action "destroyHandler")
         )
     )
 }}
