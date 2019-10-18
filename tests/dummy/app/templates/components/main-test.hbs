@@ -1,14 +1,14 @@
-{{#ember-dnd class='test-list' as |dnd|}}
+{{#ember-dnd class="test-list" as |dnd|}}
   {{#each items as |itemModel i|}}
-    {{#dnd.item model=itemModel class=(concat 'test-list__item test-list__item--' i) handlerSelector='.test-list__handler'  as |item|}}
+    {{#dnd.item model=itemModel class=(concat "test-list__item test-list__item--" i) handlerSelector=".test-list__handler"  as |item|}}
       <div class="test-list__handler"></div>
     {{/dnd.item}}
   {{/each}}
 {{/ember-dnd}}
 
-{{#ember-dnd class='test-list' as |dnd|}}
+{{#ember-dnd class="test-list" as |dnd|}}
   {{#each items as |itemModel i|}}
-    {{#dnd.item model=itemModel class=(concat 'test-list__item test-list__item--' i)}}
+    {{#dnd.item model=itemModel class=(concat "test-list__item test-list__item--" i)}}
     {{/dnd.item}}
   {{/each}}
 {{/ember-dnd}}
